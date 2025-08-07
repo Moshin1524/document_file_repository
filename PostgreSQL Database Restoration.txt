@@ -1,0 +1,82 @@
+PostgreSQL Database Restoration and Odoo Configuration on Ubuntu
+================================================================
+
+1. Download Required Files
+--------------------------
+- file_store folder (contains attachments and media files)
+- .sql file (PostgreSQL database dump)
+
+2. Move and Rename the file_store Folder
+----------------------------------------
+- Move the file_store into Odoo's filestore directory (usually in .local/share/Odoo/filestore/)
+- Rename the folder to match the name of the database to be created.
+  Example:
+  .local/share/Odoo/filestore/db_name
+
+3. Create PostgreSQL User and Database
+--------------------------------------
+Switch to the PostgreSQL user and access the shell:
+    sudo su - postgres
+    psql
+
+Inside the psql shell, run:
+    CREATE USER odoo14 WITH PASSWORD 'mypassword';
+    ALTER USER odoo14 CREATEDB;
+    \l    (to list databases and verify)
+    \q    (to exit)
+
+4. Edit Odoo Configuration File
+-------------------------------
+Edit the config file:
+    sudo nano /etc/odoo_version.conf
+
+Add or update the following lines:
+
+    [options]
+    db_host = localhost
+    db_port = 5432
+    db_user = odoo14
+    db_password = mypassword
+
+Save and exit:
+    Press Ctrl+X, then Y, then Enter
+
+5. Restore the Database
+-----------------------
+Use the following command to restore the database:
+
+    pg_restore -U db_user -d database_name -h localhost -p db_port -W -j 4 -v backup_file.sql
+
+Example:
+    pg_restore -U odoo14 -d odoo14_db -h localhost -p 5432 -W -j 4 -v backup_file.sql
+
+6. Explanation of Parameters
+----------------------------
+
+pg_restore:
+    The command-line tool used to restore PostgreSQL databases.
+
+-U db_user:
+    The PostgreSQL user to connect with (e.g., odoo14).
+
+-d database_name:
+    The target database to restore the backup into.
+
+-h localhost:
+    Host where the PostgreSQL server is running.
+
+-p db_port:
+    Port PostgreSQL is listening on (default: 5432).
+
+-W:
+    Prompt for the password of the specified PostgreSQL user.
+
+-j 4:
+    Use 4 parallel jobs to restore the database (works with .tar or .dump formats).
+
+-v:
+    Verbose mode to print detailed progress.
+
+backup_file.sql:
+    The path to your backup file. It can be a .sql, .tar, or .dump file.
+
